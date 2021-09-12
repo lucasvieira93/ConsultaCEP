@@ -7,6 +7,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -20,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button botaoRecuperar;
     private TextView textoResultado;
-    private  TextView textoCep;
+    private TextView textoCep;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,17 +38,20 @@ public class MainActivity extends AppCompatActivity {
         botaoRecuperar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MyTask task = new MyTask();
-                String urlApi = "https://blockchain.info/ticker";
-                String cep = textoCep.getText().toString();
-                String urlCep = "https://viacep.com.br/ws/" + cep + "/json/";
-                task.execute(urlCep);
+                if (textoCep.length() != 8) {
+                    Toast.makeText(MainActivity.this, "confira o CEP!", Toast.LENGTH_SHORT).show();
+                } else {
+                    MyTask task = new MyTask();
+                    String cep = textoCep.getText().toString();
+                    String urlCep = "https://viacep.com.br/ws/" + cep + "/json/";
+                    task.execute(urlCep);
+                }
             }
         });
 
     }
 
-    class MyTask extends AsyncTask<String, Void, String>{
+    class MyTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected void onPreExecute() {
@@ -68,15 +75,15 @@ public class MainActivity extends AppCompatActivity {
                 inputStream = conexao.getInputStream();
 
                 //inputStreamReader lê os dados em Bytes e decodifica para caracteres
-                inputStreamReader = new InputStreamReader( inputStream );
+                inputStreamReader = new InputStreamReader(inputStream);
 
                 //Objeto utilizado para leitura dos caracteres do InpuStreamReader
-                BufferedReader reader = new BufferedReader( inputStreamReader );
+                BufferedReader reader = new BufferedReader(inputStreamReader);
                 buffer = new StringBuffer();
                 String linha = "";
 
-                while((linha = reader.readLine()) != null){
-                    buffer.append( linha );
+                while ((linha = reader.readLine()) != null) {
+                    buffer.append(linha);
                 }
 
             } catch (MalformedURLException e) {
@@ -91,7 +98,27 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String resultado) {
             super.onPostExecute(resultado);
-            textoResultado.setText( resultado );
+
+            String logradouro = null;
+            String bairro = null;
+            String localidade = null;
+            String uf = null;
+            String enderecoCompleto = null;
+
+            try {
+                JSONObject jsonObject = new JSONObject(resultado);
+
+                logradouro = jsonObject.getString("logradouro");
+                bairro = jsonObject.getString("bairro");
+                localidade = jsonObject.getString("localidade");
+                uf = jsonObject.getString("uf");
+                enderecoCompleto = logradouro + ", " + bairro + ", " + localidade + " - " + uf;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            textoResultado.setText(enderecoCompleto);
         }
     }
 
