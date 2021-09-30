@@ -4,13 +4,17 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.lucasvieira.requisieshttp.api.CEPService;
+import com.lucasvieira.requisieshttp.api.DataService;
 import com.lucasvieira.requisieshttp.model.CEP;
+import com.lucasvieira.requisieshttp.model.Foto;
+import com.lucasvieira.requisieshttp.model.Postagem;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,6 +26,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -35,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView textoResultado;
     private TextView textoCep;
     private Retrofit retrofit;
+    private List<Foto> listaFotos = new ArrayList<>();
+    private List<Postagem> listaPostagens = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +54,8 @@ public class MainActivity extends AppCompatActivity {
         textoCep = findViewById(R.id.textCep);
 
         retrofit = new Retrofit.Builder()
-                .baseUrl("https://viacep.com.br/ws/")
+//                .baseUrl("https://viacep.com.br/ws/")
+                .baseUrl("https://jsonplaceholder.typicode.com")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -54,7 +63,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                recuperarCEPRetrofit();
+//                recuperarCEPRetrofit();
+                recuperarListaRetrofit();
 
 /*                if (textoCep.length() != 8) {
                     Toast.makeText(MainActivity.this, "confira o CEP!", Toast.LENGTH_SHORT).show();
@@ -73,10 +83,36 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void recuperarListaRetrofit(){
+
+        DataService service = retrofit.create(DataService.class);
+        Call<List<Foto>> call = service.recuperarFotos();
+
+        call.enqueue(new Callback<List<Foto>>() {
+            @Override
+            public void onResponse(Call<List<Foto>> call, Response<List<Foto>> response) {
+                if (response.isSuccessful()){
+                    listaFotos = response.body();
+
+                    for (int i = 0; i < listaFotos.size(); i++){
+                        Foto foto = listaFotos.get(i);
+                        Log.d("resultado", "resultado: " + foto.getId() + " / " + foto.getTitle());
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Foto>> call, Throwable t) {
+
+            }
+        });
+
+    }
+
     private void recuperarCEPRetrofit(){
 
         CEPService cepService = retrofit.create( CEPService.class );
-        Call<CEP> call = cepService.recuperarCEP();
+        Call<CEP> call = cepService.recuperarCEP("11390010");
 
         call.enqueue(new Callback<CEP>() {
             @Override
