@@ -64,7 +64,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
 //                recuperarCEPRetrofit();
-                recuperarListaRetrofit();
+//                recuperarListaRetrofit();
+                salvarPostagem();
 
 /*                if (textoCep.length() != 8) {
                     Toast.makeText(MainActivity.this, "confira o CEP!", Toast.LENGTH_SHORT).show();
@@ -83,16 +84,49 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void salvarPostagem() {
+
+        //Configura  objeto postagem
+//        Postagem postagem = new Postagem("1234", "Título postagem!", "Corpo postagem!");
+
+        //recupera o serviço e salva postagem
+        DataService service = retrofit.create(DataService.class);
+        Call<Postagem> call = service.salvarPostagem("1234", "Título postagem!", "Corpo postagem!");
+
+        call.enqueue(new Callback<Postagem>() {
+            @Override
+            public void onResponse(Call<Postagem> call, Response<Postagem> response) {
+
+                if (response.isSuccessful()){
+                    Postagem postagemResposta = response.body();
+                    textoResultado.setText(
+                            "Código: " + response.code() +
+                            " id: " + postagemResposta.getId() +
+                            " Title: " + postagemResposta.getTitle()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Postagem> call, Throwable t) {
+
+            }
+        });
+
+
+    }
+
     private void recuperarListaRetrofit(){
 
         DataService service = retrofit.create(DataService.class);
-        Call<List<Foto>> call = service.recuperarFotos();
+//        Call<List<Foto>> call = service.recuperarFotos();
+        Call<List<Postagem>> call = service.recuperarPostagens();
 
-        call.enqueue(new Callback<List<Foto>>() {
+        call.enqueue(new Callback<List<Postagem>>() {
             @Override
-            public void onResponse(Call<List<Foto>> call, Response<List<Foto>> response) {
+            public void onResponse(Call<List<Postagem>> call, Response<List<Postagem>> response) {
                 if (response.isSuccessful()){
-                    listaFotos = response.body();
+                    listaPostagens = response.body();
 
                     for (int i = 0; i < listaFotos.size(); i++){
                         Foto foto = listaFotos.get(i);
@@ -102,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<Foto>> call, Throwable t) {
+            public void onFailure(Call<List<Postagem>> call, Throwable t) {
 
             }
         });
